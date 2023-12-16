@@ -1,1 +1,1 @@
-rootProject.name = "com.wellitonpaiva.eugenioides"
+rootProject.name = "eugenioides"
