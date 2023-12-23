@@ -5,8 +5,6 @@ import coffee.data.ResearchLine
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import java.io.File
 
-
-
 class Research(filePath: String) {
     private val file = File(object {}.javaClass.getResource(filePath)?.file!!)
     val researchLines: List<ResearchLine> = readFile()

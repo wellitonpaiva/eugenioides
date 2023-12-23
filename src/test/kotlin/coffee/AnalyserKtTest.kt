@@ -1,5 +1,6 @@
 package coffee
 
+import coffee.data.PreferredDrinkingPlace
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -8,7 +9,8 @@ class AnalyserKtTest {
     private val research = Research("/small_example.csv")
 
     @Test
-    fun `can read file`() = assertEquals(2, research.readFile().size)
+    fun `can read file`() =
+        assertEquals(2, research.readFile().size)
 
     @Test
     fun `can parse file`() {
@@ -17,5 +19,10 @@ class AnalyserKtTest {
             assertEquals("Zd694B", get(1).id)
         }
 
+    }
+
+    @Test
+    fun filterByPreferredPlace() {
+        assertEquals(1, research.filterByPreferredPlace(PreferredDrinkingPlace.HOME).size)
     }
 }
