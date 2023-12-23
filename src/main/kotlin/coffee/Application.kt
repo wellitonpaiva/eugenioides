@@ -1,6 +1,7 @@
 package coffee
 
 import coffee.data.PreferredDrinkingPlace
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -35,9 +36,15 @@ fun Application.routes(research: Research) {
             call.respond(PreferredDrinkingPlace.entries.toTypedArray())
         }
         get("/research/drinking-place/{place}") {
-            call.respond(
-                research.filterByPreferredPlace(PreferredDrinkingPlace.valueOf(call.parameters["place"].toString()))
-            )
+            try {
+                call.respond(
+                    research.filterByPreferredPlace(
+                        PreferredDrinkingPlace.valueOf(call.parameters["place"].toString().uppercase())
+                    )
+                )
+            } catch (e: IllegalArgumentException) {
+                call.respond(HttpStatusCode.NotAcceptable, "Option not found, please use the following options: ${PreferredDrinkingPlace.entries}")
+            }
         }
     }
 }

@@ -66,8 +66,20 @@ class ApplicationTest {
                 })
             }
         }
+        assertEquals(1, client.get("/research/drinking-place/HOME").body<List<ResearchLine>>().size)
+        assertEquals(1, client.get("/research/drinking-place/home").body<List<ResearchLine>>().size)
+    }
 
-        val response = client.get("/research/drinking-place/HOME")
-        assertEquals(1, response.body<List<ResearchLine>>().size)
+    @Test
+    fun `wrong drinking option`()  = testApplication {
+        application {
+            install(serverContentNegotiation) {
+                json()
+            }
+            routes(research)
+        }
+        val response = client.get("/research/drinking-place/WRONG")
+        assertEquals(HttpStatusCode.NotAcceptable, response.status)
+        assertEquals("Option not found, please use the following options: [HOME, OFFICE, ON_THE_GO, CAFE, OTHER]", response.bodyAsText())
     }
 }
