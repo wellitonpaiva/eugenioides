@@ -1,12 +1,20 @@
 package coffee
 
+import coffee.data.PreferredDrinkingPlace
 import coffee.data.ResearchLine
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import java.io.File
 
-val file = File(object {}.javaClass.getResource("/GACTT_RESULTS_ANONYMIZED_v2.csv")?.file!!)
-val researchLines: List<ResearchLine> = readFile(file)
 
-fun readFile(file: File): List<ResearchLine> =
-    csvReader().readAllWithHeader(file).map { ResearchLine(it) }
+
+class Research(filePath: String) {
+    private val file = File(object {}.javaClass.getResource(filePath)?.file!!)
+    val researchLines: List<ResearchLine> = readFile()
+    fun filterByPreferredPlace(place: PreferredDrinkingPlace): List<ResearchLine> =
+        researchLines.filter { it.coffeeDrinkingPlace.isIt(place) }
+
+    fun readFile(): List<ResearchLine> =
+        csvReader().readAllWithHeader(file).map { ResearchLine(it) }
+}
+
 

@@ -1,22 +1,21 @@
 package coffee
 
 import org.junit.Test
-import java.io.File
 import kotlin.test.assertEquals
 
 class AnalyserKtTest {
 
+    private val research = Research("/small_example.csv")
+
     @Test
-    fun `can read file`() {
-        val file = File(this.javaClass.getResource("/small_example.csv")!!.file)
-        assertEquals(2, readFile(file).size)
-    }
+    fun `can read file`() = assertEquals(2, research.readFile().size)
 
     @Test
     fun `can parse file`() {
-        val file = File(this.javaClass.getResource("/small_example.csv")!!.file)
-        val rows = readFile(file)
-        assertEquals("pKL8aB", rows[0].id)
-        assertEquals("Zd694B", rows[1].id)
+        research.readFile().apply {
+            assertEquals("pKL8aB", get(0).id)
+            assertEquals("Zd694B", get(1).id)
+        }
+
     }
 }

@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
 fun main() {
+    val research = Research("/GACTT_RESULTS_ANONYMIZED_v2.csv")
     embeddedServer(Netty, port = 8080) {
         install(ContentNegotiation) {
             json(Json {
@@ -18,20 +19,25 @@ fun main() {
                 isLenient = true
             })
         }
-        routes()
+        routes(research)
     }.start(wait = true)
 }
 
-fun Application.routes() {
+fun Application.routes(research: Research) {
     routing {
         get("/") {
             call.respondText("Hello there!")
         }
         get("/research") {
-            call.respond(researchLines)
+            call.respond(research.researchLines)
         }
         get("/research/drinking-place/") {
             call.respond(PreferredDrinkingPlace.entries.toTypedArray())
+        }
+        get("/research/drinking-place/{place}") {
+            call.respond(
+                research.filterByPreferredPlace(PreferredDrinkingPlace.valueOf(call.parameters["place"].toString()))
+            )
         }
     }
 }

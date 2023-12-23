@@ -1,5 +1,6 @@
 package coffee.data
 
+import coffee.data.PreferredDrinkingPlace.*
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,6 +18,15 @@ data class CoffeeDrinkingPlace(
         cafe = map["Where do you typically drink coffee? (At a cafe)"].toBoolean(),
         other = map["Where do you typically drink coffee? (None of these)"].toBoolean(),
     )
+
+    fun isIt(place: PreferredDrinkingPlace): Boolean =
+        when(place) {
+            HOME -> home
+            OFFICE -> office
+            ON_THE_GO -> onTheGo
+            CAFE -> cafe
+            OTHER -> other
+        }
 }
 
 @Serializable
