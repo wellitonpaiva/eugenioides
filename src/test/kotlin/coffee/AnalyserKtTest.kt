@@ -16,7 +16,7 @@ class AnalyserKtTest {
     fun `can parse file`() {
         val file = File(this.javaClass.getResource("/small_example.csv")!!.file)
         val rows = readFile(file)
-        assertEquals("gMR29l", rows[0].id)
-        assertEquals("BkPN0e", rows[1].id)
+        assertEquals("pKL8aB", rows[0].id)
+        assertEquals("Zd694B", rows[1].id)
     }
 }
