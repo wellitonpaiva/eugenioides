@@ -1,85 +1,55 @@
 package coffee
 
-import coffee.data.ResearchLine
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.testing.*
-import kotlinx.serialization.json.Json
+import org.http4k.core.Method
+import org.http4k.core.Request
+import org.http4k.core.Response
+import org.http4k.core.Status
+import org.http4k.core.Status.Companion.OK
 import org.junit.Test
 import kotlin.test.assertEquals
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as serverContentNegotiation
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as clientContentNegotiation
 
 class ApplicationTest {
 
     private val research = Research("/small_example.csv")
 
     @Test
-    fun `hello there!`() = testApplication {
-        application { routes(research) }
-        val response = client.get("/")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Hello there!", response.bodyAsText())
+    fun `hello there!`() {
+        val response: Response = homeRoute().invoke(Request(Method.GET, "/"))
+        assertEquals("Hello there!", response.bodyString())
     }
 
     @Test
-    fun `get preferred drinking place options`() = testApplication {
-        application {
-            install(serverContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = true
-                })
-            }
-            routes(research)
-        }
-        val expected = """[
-                          |    "HOME",
-                          |    "OFFICE",
-                          |    "ON_THE_GO",
-                          |    "CAFE",
-                          |    "OTHER"
-                          |]""".trimMargin()
-        val response = client.get("/research/drinking-place/")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(expected, response.bodyAsText())
+    fun `get preferred drinking place options`() {
+        val expected = """["HOME","OFFICE","ON_THE_GO","CAFE","OTHER"]"""
+        val response: Response = drinkingPlaceOptionsRoute().invoke(Request(Method.GET, "/research/drinking-place/"))
+        assertEquals(OK, response.status)
+        assertEquals(expected, response.bodyString())
     }
 
     @Test
-    fun `get only home drinking data`() = testApplication {
-        application {
-            install(serverContentNegotiation) {
-                json()
-            }
-            routes(research)
-        }
-        val client = createClient {
-            install(clientContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = true
-                })
-            }
-        }
-        assertEquals(1, client.get("/research/drinking-place/HOME").body<List<ResearchLine>>().size)
-        assertEquals(1, client.get("/research/drinking-place/home").body<List<ResearchLine>>().size)
+    fun `get only home drinking data`() {
+        val response = researchByDrinkingPlace(research).invoke(
+            Request(
+                Method.GET,
+                "/research/drinking-place/HOME"
+            )
+        )
+
+        assertEquals(1, researchLens(response).size)
     }
 
     @Test
-    fun `wrong drinking option`()  = testApplication {
-        application {
-            install(serverContentNegotiation) {
-                json()
-            }
-            routes(research)
-        }
-        val response = client.get("/research/drinking-place/WRONG")
-        assertEquals(HttpStatusCode.NotAcceptable, response.status)
-        assertEquals("Option not found, please use the following options: [HOME, OFFICE, ON_THE_GO, CAFE, OTHER]", response.bodyAsText())
+    fun `wrong drinking option`() {
+        val response = researchByDrinkingPlace(research).invoke(
+            Request(
+                Method.GET,
+                "/research/drinking-place/WRONG"
+            )
+        )
+        assertEquals(Status.NOT_ACCEPTABLE, response.status)
+        assertEquals(
+            "Option not found, please use the following options: [HOME, OFFICE, ON_THE_GO, CAFE, OTHER]",
+            response.bodyString()
+        )
     }
 }
