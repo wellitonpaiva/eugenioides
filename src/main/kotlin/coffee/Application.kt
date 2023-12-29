@@ -39,17 +39,9 @@ fun homeRoute(): RoutingHttpHandler = "/" bind GET to {
 
 fun researchByDrinkingPlace(research: Research) =
     "/research/drinking-place/{place}" bind GET to { req: Request ->
-        try {
-            Response(OK).with(
-                researchLens of research.filterByPreferredPlace(
-                    PreferredDrinkingPlace.valueOf(
-                        drinkingPlacePathLens(req).uppercase()
-                    )
-                )
-            )
-        } catch (e: IllegalArgumentException) {
-            Response(NOT_ACCEPTABLE).body("Option not found, please use the following options: ${PreferredDrinkingPlace.entries}")
-        }
+        Result.runCatching { PreferredDrinkingPlace.valueOf(drinkingPlacePathLens(req).uppercase()) }
+            .map { Response(OK).with(researchLens of research.filterByPreferredPlace(it)) }
+            .getOrElse { Response(NOT_ACCEPTABLE).body("Option not found, please use the following options: ${PreferredDrinkingPlace.entries}") }
     }
 
 fun drinkingPlaceOptionsRoute() = "/research/drinking-place/" bind GET to {
