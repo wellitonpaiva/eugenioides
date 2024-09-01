@@ -18,11 +18,8 @@ class AnalyserKtTest {
             assertEquals("pKL8aB", get(0).id)
             assertEquals("Zd694B", get(1).id)
         }
-
     }
 
     @Test
-    fun filterByPreferredPlace() {
-        assertEquals(1, research.filterByPreferredPlace(PreferredDrinkingPlace.HOME).size)
-    }
+    fun filterByPreferredPlace() = assertEquals(1, research.filterByPreferredPlace(PreferredDrinkingPlace.HOME).size)
 }

@@ -5,16 +5,19 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.Status.Companion.OK
+import org.http4k.routing.bind
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class ApplicationTest {
+class RoutesKtTest {
 
     private val research = Research("/small_example.csv")
 
     @Test
     fun `hello there!`() {
-        val response: Response = homeRoute().invoke(Request(Method.GET, "/"))
+        val response: Response = ("/" bind Method.GET to {
+            Response(OK).body("Hello there!")
+        }).invoke(Request(Method.GET, "/"))
         assertEquals("Hello there!", response.bodyString())
     }
 
@@ -28,7 +31,7 @@ class ApplicationTest {
 
     @Test
     fun `get only home drinking data`() {
-        val response = researchByDrinkingPlace(research).invoke(
+        val response = researchByDrinkingPlaceRoute(research).invoke(
             Request(
                 Method.GET,
                 "/research/drinking-place/HOME"
@@ -40,7 +43,7 @@ class ApplicationTest {
 
     @Test
     fun `wrong drinking option`() {
-        val response = researchByDrinkingPlace(research).invoke(
+        val response = researchByDrinkingPlaceRoute(research).invoke(
             Request(
                 Method.GET,
                 "/research/drinking-place/WRONG"

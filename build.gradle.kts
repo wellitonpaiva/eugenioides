@@ -16,6 +16,7 @@ dependencies {
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-server-netty")
     implementation("org.http4k:http4k-format-kotlinx-serialization")
+    implementation("org.jetbrains.kotlinx:kotlinx-html:0.11.0")
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 }
