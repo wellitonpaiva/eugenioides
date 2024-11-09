@@ -1,21 +1,30 @@
 val kotlinVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.9.21"
-    id ("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
+    kotlin("jvm") version "2.0.21"
+    id("io.ktor.plugin") version "3.0.1"
 }
-
-version = "0.0.1"
 
 repositories {
     mavenCentral()
 }
 
+application {
+    mainClass.set("coffee.ApplicationKt")
+
+    val isDevelopment: Boolean = project.ext.has("development")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
+
 dependencies {
-    implementation(platform("org.http4k:http4k-bom:5.11.1.0"))
-    implementation("org.http4k:http4k-core")
-    implementation("org.http4k:http4k-server-netty")
-    implementation("org.http4k:http4k-format-kotlinx-serialization")
+    implementation("io.ktor:ktor-server-core-jvm")
+    implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-config-yaml")
+    implementation("io.ktor:ktor-serialization-jackson-jvm")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm")
+    implementation("io.ktor:ktor-server-html-builder")
+    testImplementation("io.ktor:ktor-server-test-host-jvm")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-html:0.11.0")
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")

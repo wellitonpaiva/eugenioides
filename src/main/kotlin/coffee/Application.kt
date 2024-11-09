@@ -1,58 +1,92 @@
 package coffee
 
+import coffee.data.PreferredDrinkingPlace
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
+import com.fasterxml.jackson.databind.SerializationFeature
+import io.ktor.http.*
+import io.ktor.serialization.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.html.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.html.*
-import kotlinx.html.stream.createHTML
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import org.http4k.core.Method
-import org.http4k.core.Response
-import org.http4k.core.Status
-import org.http4k.core.then
-import org.http4k.filter.ServerFilters
-import org.http4k.routing.bind
-import org.http4k.routing.routes
-import org.http4k.server.Netty
-import org.http4k.server.asServer
 
+val writer: ObjectWriter = ObjectMapper().writer()
 
 fun main() {
     val research = Research("/GACTT_RESULTS_ANONYMIZED_v2.csv")
 
-    ServerFilters.CatchLensFailure
-        .then(
-            routes(
-                "/" bind Method.GET to {
-                    Response(Status.OK).body(createHTML().html {
-                        head {
-                            script {
-                                type = ScriptType.textJScript
-                                src = "https://unpkg.com/htmx.org@2.0.1"
-                            }
-                            script {
-                                type = ScriptType.textJScript
-                                src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"
-                            }
-
-                            link(rel = "stylesheet", href = "https://cdn.simplecss.org/simple.min.css")
-                        }
-                        body {
-                            h1 { +"Eugenioides" }
-                            div {
-                                chart("Preferred drinking places", research.mapByPreferredPlace())
-                                chart("Preferred Brewing Method", research.mapByPreferredBrewingMethod())
-                            }
-                        }
-                    })
-                },
-                allResearchRoute(research),
-                drinkingPlaceOptionsRoute(),
-                researchByDrinkingPlaceRoute(research),
-            )
-        )
-        .asServer(Netty(8080)).start()
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = {
+        install(ContentNegotiation) {
+            jackson {
+                enable(SerializationFeature.INDENT_OUTPUT)
+            }
+        }
+        routing {
+            home(research)
+            allResearch(research)
+            researchByDrinkingPlaceRoute(research)
+            drinkingPlaceOptionsRoute()
+        }
+    })
+        .start(wait = true)
 }
 
-private fun DIV.chart(title: String, data: Map<String, Int>) {
+fun Routing.allResearch(research: Research) =
+    get("/research") {
+        call.respond(research)
+    }
+
+fun Routing.researchByDrinkingPlaceRoute(research: Research) =
+    get("/research/drinking-place/{place}") {
+        kotlin.runCatching {
+            call.pathParameters["place"]?.let {
+                call.respond(research.filterByPreferredPlace(PreferredDrinkingPlace.valueOf(it)))
+            }
+        }.getOrElse {
+            call.respond(
+                HttpStatusCode.NotAcceptable,
+                "Option not found, please use the following options: ${PreferredDrinkingPlace.entries}"
+            )
+        }
+    }
+
+fun Routing.drinkingPlaceOptionsRoute() = get("/research/drinking-place/") {
+    call.respond(PreferredDrinkingPlace.entries.toTypedArray())
+}
+
+
+fun Routing.home(research: Research) =
+    get("/") {
+        call.respondHtml {
+            head {
+                script {
+                    type = ScriptType.textJScript
+                    src = "https://unpkg.com/htmx.org@2.0.1"
+                }
+                script {
+                    type = ScriptType.textJScript
+                    src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"
+                }
+
+                link(rel = "stylesheet", href = "https://cdn.simplecss.org/simple.min.css")
+            }
+            body {
+                h1 { +"Eugenioides" }
+                div {
+                    chart("Preferred drinking places", research.mapByPreferredPlace())
+                    chart("Preferred Brewing Method", research.mapByPreferredBrewingMethod())
+                }
+            }
+        }
+    }
+
+fun DIV.chart(title: String, data: Map<String, Int>) {
+
     div {
         val titleId = title.replace(" ", "").lowercase()
         canvas { id = titleId }
@@ -67,10 +101,10 @@ private fun DIV.chart(title: String, data: Map<String, Int>) {
                   new Chart(method$titleId, {
                     type: 'doughnut',
                     data: {
-                      labels: ${Json.encodeToString(data.keys)},
+                      labels: ${writer.writeValueAsString(data.keys)},
                       datasets: [{
                         label: '# of Votes',
-                        data: ${Json.encodeToString(data.values)},
+                        data: ${writer.writeValueAsString(data.values)},
                         borderWidth: 1
                       }]
                     },
